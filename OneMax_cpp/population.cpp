@@ -1,13 +1,28 @@
 #include <stdio.h>
 #include "population.hpp"
+#include "parameters.hpp"
 
 // constructor
+/*
 population::population()
 {
     int i;
     ind = new individual* [POP_SIZE];
     next_ind = new individual* [POP_SIZE];
     for (i = 0; i < POP_SIZE; i++) {
+        ind[i] = new individual();
+        next_ind[i] = new individual();
+    }
+}
+*/
+
+population::population(Parameters *prms)
+{
+    int i;
+    int pop_size = prms->getPopSize();
+    ind = new individual* [pop_size];
+    next_ind = new individual* [pop_size];
+    for (i = 0; i < pop_size; i++) {
         ind[i] = new individual();
         next_ind[i] = new individual();
     }

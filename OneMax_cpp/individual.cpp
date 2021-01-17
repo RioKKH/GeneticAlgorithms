@@ -1,14 +1,22 @@
 #include <list>
 #include <numeric>
+#include <iostream>
+#include <fstream>
+#include <string>
 
 #include "individual.hpp"
+#include "parameters.hpp"
 
 #define SIZE_OF_ARRAY(array) (sizeof(array)/sizeof(array[0]))
+// #define ONEMAX_PARAM_FILE "onemax_prms.dat"
 
 
 // constructor
-individual::individual()
+individual::individual(Parameters *prms)
 {
+    int N = prms->getLengthOfChromosome();
+    int nBytes = N * sizeof(int);
+    chromosome = (int *)malloc(nBytes);
     for (int i = 0; i < N; i++) {
         chromosome[i] = rand() % 2;
     }
@@ -16,16 +24,18 @@ individual::individual()
 }
 
 // deconstructor
-individual::~individual() {}
+individual::~individual() {
+    std::cout << "destructor" << std::endl;
+    delete chromosome;
+}
 
 
 // 適応度を算出する
 void individual::evaluate()
 {
     // fitness = 0;
-    fitness = std::accumulate(chromosome, chromosome + SIZE_OF_ARRAY(chromosome), 0);
+    fitness = std::accumulate(chromosome, chromosome + SIZE_OF_ARRAY(*chromosome), 0);
 }
-
 
 /**
  * @brief    Sigle point crossover

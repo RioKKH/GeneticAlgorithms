@@ -1,9 +1,11 @@
 #include "individual.hpp"
+#include "parameters.hpp"
 
 class population
 {
 public:
-    population();
+    // population();
+    population(Parameters *prms);
     ~population();
     void alternate();            // 世代交代をする
     void print_result();          // 結果を表示する
