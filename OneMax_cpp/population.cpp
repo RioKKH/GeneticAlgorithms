@@ -1,30 +1,24 @@
 #include <stdio.h>
 #include "population.hpp"
-#include "parameters.hpp"
+// #include "parameters.hpp"
 
 // constructor
-/*
-population::population()
-{
-    int i;
-    ind = new individual* [POP_SIZE];
-    next_ind = new individual* [POP_SIZE];
-    for (i = 0; i < POP_SIZE; i++) {
-        ind[i] = new individual();
-        next_ind[i] = new individual();
-    }
-}
-*/
 
 population::population(Parameters *prms)
 {
     int i;
-    int pop_size = prms->getPopSize();
+    pop_size = prms->getPopSize();
+    elite = prms->getElite();
+    N = prms->getNumberOfChromosome();
+    tournament_size = prms->getTournamentSize();
+
     ind = new individual* [pop_size];
     next_ind = new individual* [pop_size];
+    tr_fit = new double[pop_size];
+
     for (i = 0; i < pop_size; i++) {
-        ind[i] = new individual();
-        next_ind[i] = new individual();
+        ind[i] = new individual(prms);
+        next_ind[i] = new individual(prms);
     }
 }
 
@@ -32,12 +26,13 @@ population::population(Parameters *prms)
 population::~population()
 {
     int i;
-    for (i = 0; i < POP_SIZE; i++) {
+    for (i = 0; i < pop_size; i++) {
         delete ind[i];
         delete next_ind[i];
     }
     delete[] ind;
     delete[] next_ind;
+    delete[] tr_fit;
 }
 
 
@@ -51,10 +46,10 @@ void population::evaluate()
 {
     int i;
 
-    for (i = 0; i < POP_SIZE; i++) {
+    for (i = 0; i < pop_size; i++) {
         ind[i]->evaluate();
     }
-    sort(0, POP_SIZE - 1);
+    sort(0, pop_size - 1);
 }
 
 /**
@@ -119,7 +114,7 @@ void population::alternate()
     evaluate();
 
     printf("print fitness value\n");
-    for (i = 0; i < POP_SIZE; i++) {
+    for (i = 0; i < pop_size; i++) {
         printf("index %d: fitness: %d: ", i, ind[i]->fitness);
         for (j = 0; j < N; j++) {
             printf("%d", ind[i]->chromosome[j]);
@@ -129,7 +124,7 @@ void population::alternate()
 
     // Apply elitism and pick up elites for next generation
     printf("Elitism\n");
-    for (i = 0; i < ELITE; i++) {
+    for (i = 0; i < elite; i++) {
         for (j = 0; j < N; j++) {
             next_ind[i]->chromosome[j] = ind[i]->chromosome[j];
         }
@@ -137,7 +132,7 @@ void population::alternate()
 
     // select parents and do the crossover
     printf("select parents and do the crossover\n");
-    for (; i < POP_SIZE; i++) {
+    for (; i < pop_size; i++) {
         p1 = select_by_tournament();
         p2 = select_by_tournament();
         printf("p1: ");
@@ -160,7 +155,7 @@ void population::alternate()
 
     // Mutate candidate of next generation
     printf("Mutate candidate of next generation\n");
-    for (i = 1; i < POP_SIZE; i++) {
+    for (i = 1; i < pop_size; i++) {
         next_ind[i]->mutate();
     }
 
@@ -203,7 +198,7 @@ int population::select_by_roulette()
     double prob, r;
 
     r = RAND_01;
-    for (rank = 1; rank < POP_SIZE; rank++) {
+    for (rank = 1; rank < pop_size; rank++) {
         prob = tr_fit[rank - 1] / denom;
         if (r <= prob) {
             break;
@@ -222,38 +217,38 @@ int population::select_by_tournament()
 {
     int i, ret, num, r;
     int best_fit;
-    int tmp[POP_SIZE];
-    // int tmp[N];
+    int *tmp;
+    tmp = new int[pop_size];
 
     printf("initialize tmp\n");
-    for (i = 0; i < POP_SIZE; i++) {
-    // for (i = 0; i < N; i++) {
+    for (i = 0; i < pop_size; i++) {
         tmp[i] = 0;
     }
+
     ret = -1;
-    // bset_fit = DBL_MAX;
     best_fit = 0; // in case of one-max prob., bigger fitness is better.
     num = 0;
     printf("enter while loop\n");
     while(1) {
-        r = rand() % POP_SIZE; // ここはPOP_SIZEの剰余でないとおかしいと思う
+        r = rand() % pop_size; // ここはPOP_SIZEの剰余でないとおかしいと思う
         printf("r: %d, tmp[%d]: %d\n", r, r, tmp[r]);
         // r = rand() % N;
         if (tmp[r] == 0) { // 既に確認済みの個体については除外出来るようにしている
             tmp[r] = 1; 
             // printf("check if fitness is better than current best fitness\n");
-            printf("num: %d/%d\n", num + 1, TOURNAMENT_SIZE);
+            printf("num: %d/%d\n", num + 1, tournament_size);
             printf("current best fitness value %i , candidate fitness value %d\n",
                     best_fit, ind[r]->fitness);
             if (ind[r]->fitness > best_fit) {
                 ret = r;
                 best_fit = ind[r]->fitness;
             }
-            if (++num == TOURNAMENT_SIZE) {
+            if (++num == tournament_size) {
                 break;
             }
         }
     }
+    delete[] tmp;
     return ret;
 }
 

@@ -1,23 +1,25 @@
+#include <iostream>
 #include <stdio.h>
 #include "population.hpp"
-#include "parameters.hpp"
 
 int main(int argc, char **argv)
 {
-    int i;
-    population *pop;
+    int gen_max = 0;
+
     Parameters *prms;
-    prms = new Parameters(*prms);
-    // prms = new Parameters();
-    prms->loadParams();
+    prms = new Parameters();
+    gen_max = prms->getGenMax();
+    std::cout << gen_max << std::endl;
 
     srand((unsigned int)time(NULL));
-    printf("!!!Start!!!\n");
+    std::cout << "!!!Start!!!" << std::endl;;
 
-    pop = new population;
-    printf("!!!After Population!!!\n");
+    population *pop;
+    pop = new population(prms);
 
-    for (i = 1; i <= GEN_MAX; i++) {
+    std::cout << "!!!After Population!!!" << std::endl;
+
+    for (int i = 1; i <= gen_max; i++) {
         printf("Generation: %d\n", i);
         pop->alternate();
         printf("%d th generation : maximum fitness: %d\n",
@@ -28,7 +30,7 @@ int main(int argc, char **argv)
     // delete pointers
     delete pop;
     delete prms;
-    printf("!!!End!!!\n");
+    std::cout << "!!!End!!!" << std::endl;
 
     return 0;
 }

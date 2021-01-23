@@ -18,13 +18,22 @@ all : $(PROGRAM)
 #	g++ $(gcc_options) -x c++-header -o $@ $<
 
 individual.o : individual.cpp individual.hpp #all.h.gch
-	$(CC) $(gcc_options) -include all.h $< -c individual.cpp
+	$(CC) $(gcc_options) -c $< -o $@
+	#$(CC) $(gcc_options) -include all.h -c $< -o $@
+	#$(CC) $(gcc_options) -include all.h $< -c individual.cpp
 
 population.o : population.cpp population.hpp #all.h.gch
-	$(CC) $(gcc_options) -include all.h $< -c population.cpp
+	$(CC) $(gcc_options) -c $< -o $@
+	#$(CC) $(gcc_options) -include all.h -c $< -o $@
+	# $(CC) $(gcc_options) -include all.h $< -c population.cpp
 
-onemax : onemax.cpp individual.o population.o #all.h.gch
-	$(CC) $(gcc_options) -include all.h $^ -o onemax
+parameters.o : parameters.cpp parameters.hpp
+	$(CC) $(gcc_options) -c $< -o $@
+	#$(CC) $(gcc_options) -include all.h -c $< -o $@
+
+onemax : onemax.cpp individual.o population.o parameters.o #all.h.gch
+	$(CC) $(gcc_options) $^ -o onemax
+	#$(CC) $(gcc_options) -include all.h $^ -o onemax
 
 clean :
 	rm -f ${PROGRAM}

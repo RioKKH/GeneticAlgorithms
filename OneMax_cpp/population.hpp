@@ -1,5 +1,4 @@
 #include "individual.hpp"
-#include "parameters.hpp"
 
 class population
 {
@@ -13,12 +12,22 @@ public:
     individual **ind;            // 現世代の個体群のメンバ
 
 private:
+    // Data members
+    int gen_max = 0;
+    int pop_size = 0;
+    int elite = 0;
+    int N = 0;
+    int tournament_size = 0;
+    float mutate_prob = 0.0;
+
+    // member functions
     void evaluate();             // 個体を評価する
     int select_by_tournament();  // Tournament selection
     int select_by_roulette();    // Roulette selection
     void sort(int lb, int ub);   // 個体を良い順に並び替える
     individual **next_ind;        // 次世代の個体群のメンバ
-    double tr_fit[POP_SIZE]; // converted fitness value
+    double *tr_fit; // converted fitness value
+    // double tr_fit[POP_SIZE]; // converted fitness value
     double denom;  // denominator used for roulette selection
 };
 

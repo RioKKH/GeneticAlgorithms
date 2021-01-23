@@ -5,18 +5,15 @@
 #include <string>
 
 #include "individual.hpp"
-#include "parameters.hpp"
-
-#define SIZE_OF_ARRAY(array) (sizeof(array)/sizeof(array[0]))
-// #define ONEMAX_PARAM_FILE "onemax_prms.dat"
 
 
 // constructor
 individual::individual(Parameters *prms)
 {
-    int N = prms->getLengthOfChromosome();
-    int nBytes = N * sizeof(int);
-    chromosome = (int *)malloc(nBytes);
+    N = prms->getNumberOfChromosome();
+    mutate_prob = prms->getMutateProbability();
+    
+    chromosome = new int[N];
     for (int i = 0; i < N; i++) {
         chromosome[i] = rand() % 2;
     }
@@ -25,16 +22,21 @@ individual::individual(Parameters *prms)
 
 // deconstructor
 individual::~individual() {
-    std::cout << "destructor" << std::endl;
-    delete chromosome;
+    delete[] chromosome;
 }
 
 
 // 適応度を算出する
+/**
+ * @brief    Calculate fitness value
+ * @param    p1: Individual (parent1)
+ * @param    p2: Individual (parent2)
+ * @return   void
+ */
 void individual::evaluate()
 {
-    // fitness = 0;
-    fitness = std::accumulate(chromosome, chromosome + SIZE_OF_ARRAY(*chromosome), 0);
+    fitness = 0;
+    fitness = std::accumulate(chromosome, &chromosome[N], 0);
 }
 
 /**
@@ -114,7 +116,7 @@ void individual::apply_crossover_uniform(individual *p1, individual *p2)
 void individual::mutate()
 {
     for (int i = 0; i < N; i++) {
-        if (RAND_01 < MUTATE_PROB) {
+        if (RAND_01 < mutate_prob) {
             chromosome[i] = 1 - chromosome[i];
         }
     }
