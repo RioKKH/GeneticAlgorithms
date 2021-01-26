@@ -1,4 +1,6 @@
 #include <stdio.h>
+// #include <plog/Log.h> // manybe later
+
 #include "population.hpp"
 // #include "parameters.hpp"
 
@@ -6,20 +8,22 @@
 
 population::population(Parameters *prms)
 {
-    int i;
+    // load parameters
     pop_size = prms->getPopSize();
     elite = prms->getElite();
     N = prms->getNumberOfChromosome();
     tournament_size = prms->getTournamentSize();
 
+    // initialize of individuals = population
     ind = new individual* [pop_size];
     next_ind = new individual* [pop_size];
     tr_fit = new double[pop_size];
 
-    for (i = 0; i < pop_size; i++) {
+    for (int i = 0; i < pop_size; i++) {
         ind[i] = new individual(prms);
         next_ind[i] = new individual(prms);
     }
+    evaluate();
 }
 
 // destructor
@@ -44,9 +48,7 @@ population::~population()
  */
 void population::evaluate()
 {
-    int i;
-
-    for (i = 0; i < pop_size; i++) {
+    for (int i = 0; i < pop_size; i++) {
         ind[i]->evaluate();
     }
     sort(0, pop_size - 1);
@@ -96,10 +98,11 @@ void population::sort(int lb, int ub)
  */
 void population::alternate()
 {
+    static int generation = 0;
     int i, j, p1, p2;
     individual **tmp;
 
-    printf("initialize tr_fit\n");
+    // printf("initialize tr_fit\n");
     //* this is only for roulette selection
     /*
     denom = 0.0;
@@ -110,9 +113,10 @@ void population::alternate()
     }
     */
     // evaluate
-    printf("evaluate\n");
-    evaluate();
+    // printf("evaluate\n");
+    // evaluate();
 
+    /*
     printf("print fitness value\n");
     for (i = 0; i < pop_size; i++) {
         printf("index %d: fitness: %d: ", i, ind[i]->fitness);
@@ -121,20 +125,26 @@ void population::alternate()
         }
         printf("\n");
     }
+    */
 
     // Apply elitism and pick up elites for next generation
-    printf("Elitism\n");
+    // printf("Elitism\n");
     for (i = 0; i < elite; i++) {
         for (j = 0; j < N; j++) {
-            next_ind[i]->chromosome[j] = ind[i]->chromosome[j];
+        // for (j = 0; j < N; j++) {
+            next_ind[i]->chromosome[N - j] = ind[i]->chromosome[N - j];
         }
     }
 
-    // select parents and do the crossover
-    printf("select parents and do the crossover\n");
+    //- select parents and do the crossover
     for (; i < pop_size; i++) {
         p1 = select_by_tournament();
         p2 = select_by_tournament();
+        next_ind[i]->apply_crossover_tp(ind[p1], ind[p2]);
+        // next_ind[i]->apply_crossover_sp(ind[p1], ind[p2]);
+
+        // Debug Info
+        /*
         printf("p1: ");
         for (int j = 0; j < N; j++) {
             printf("%d", ind[p1]->chromosome[j]);
@@ -145,29 +155,47 @@ void population::alternate()
             printf("%d", ind[p2]->chromosome[j]);
         }
         printf("\n");
-        next_ind[i]->apply_crossover_sp(ind[p1], ind[p2]);
-        printf("nx: ");
+        printf("nx: %d ", i);
         for (int j = 0; j < N; j++) {
             printf("%d", next_ind[i]->chromosome[j]);
         }
         printf("\n");
+        */
     }
 
-    // Mutate candidate of next generation
-    printf("Mutate candidate of next generation\n");
+    //- Mutate candidate of next generation
     for (i = 1; i < pop_size; i++) {
         next_ind[i]->mutate();
     }
 
-    // change next generation to current generation
-    printf("change next generation to current generation\n");
+    //- change next generation to current generation
     tmp = ind;
     ind = next_ind;
     next_ind = tmp;
 
-    // evaluate
-    printf("evaluate\n");
+    //- evaluate
     evaluate();
+    generation++;
+
+    /*
+    //- Show the result of this generation
+    int sum = 0;
+    float mean = 0;
+    float var = 0;
+    float stdev = 0;
+
+    for (int i = 0; i < pop_size; i++) {
+        sum += ind[i]->fitness;
+    }
+    mean = (float)sum / pop_size;
+    for (int i = 0; i < pop_size; i++) {
+        var += ((float)ind[i]->fitness - mean) * ((float)ind[i]->fitness - mean);
+    }
+    stdev = sqrt(var / (pop_size - 1));
+
+    // generation, max, min, mean, stdev
+    printf("%d,%d,%d,%f,%f\n", generation, ind[N-1]->fitness, ind[0]->fitness, mean, stdev); 
+    */
 }
 
 
@@ -220,7 +248,7 @@ int population::select_by_tournament()
     int *tmp;
     tmp = new int[pop_size];
 
-    printf("initialize tmp\n");
+    // printf("initialize tmp\n");
     for (i = 0; i < pop_size; i++) {
         tmp[i] = 0;
     }
@@ -228,17 +256,18 @@ int population::select_by_tournament()
     ret = -1;
     best_fit = 0; // in case of one-max prob., bigger fitness is better.
     num = 0;
-    printf("enter while loop\n");
+    // printf("enter while loop\n");
     while(1) {
         r = rand() % pop_size; // ここはPOP_SIZEの剰余でないとおかしいと思う
-        printf("r: %d, tmp[%d]: %d\n", r, r, tmp[r]);
+        // printf("r: %d, tmp[%d]: %d\n", r, r, tmp[r]);
         // r = rand() % N;
         if (tmp[r] == 0) { // 既に確認済みの個体については除外出来るようにしている
             tmp[r] = 1; 
+            // debug print
             // printf("check if fitness is better than current best fitness\n");
-            printf("num: %d/%d\n", num + 1, tournament_size);
-            printf("current best fitness value %i , candidate fitness value %d\n",
-                    best_fit, ind[r]->fitness);
+            // printf("num: %d/%d\n", num + 1, tournament_size);
+            // printf("current best fitness value %i , candidate fitness value %d\n",
+            //         best_fit, ind[r]->fitness);
             if (ind[r]->fitness > best_fit) {
                 ret = r;
                 best_fit = ind[r]->fitness;

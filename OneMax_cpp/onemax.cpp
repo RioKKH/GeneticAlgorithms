@@ -1,36 +1,42 @@
 #include <iostream>
 #include <stdio.h>
+#include <time.h>
+#include <sys/time.h>
 #include "population.hpp"
+
+double cpuSecond() {
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    return ((double)tp.tv_sec + (double)tp.tv_usec * 1.e-6);
+}
 
 int main(int argc, char **argv)
 {
     int gen_max = 0;
+    // int pop_size = 0;
 
     Parameters *prms;
     prms = new Parameters();
     gen_max = prms->getGenMax();
-    std::cout << gen_max << std::endl;
 
     srand((unsigned int)time(NULL));
-    std::cout << "!!!Start!!!" << std::endl;;
+    // std::cout << "!!!Start!!!" << std::endl;;
 
     population *pop;
     pop = new population(prms);
 
-    std::cout << "!!!After Population!!!" << std::endl;
-
+    double iStart = cpuSecond();
     for (int i = 1; i <= gen_max; i++) {
-        printf("Generation: %d\n", i);
         pop->alternate();
-        printf("%d th generation : maximum fitness: %d\n",
-                i, pop->ind[0]->fitness);
     }
-    pop->print_result();
+    double iElaps = cpuSecond() - iStart;
+    std::cout << iElaps << std::endl;
+    // pop->print_result();
 
     // delete pointers
     delete pop;
     delete prms;
-    std::cout << "!!!End!!!" << std::endl;
+    // std::cout << "!!!End!!!" << std::endl;
 
     return 0;
 }

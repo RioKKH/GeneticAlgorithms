@@ -1,3 +1,5 @@
+#pragma once
+
 #include <regex>
 
 std::regex GEN_MAX(R"(^GEN_MAX\s+(\d+)$)");

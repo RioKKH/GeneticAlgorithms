@@ -1,3 +1,4 @@
+#pragma once
 // 標準ヘッダーのインクルード
 #include <time.h>
 #include <stdlib.h>

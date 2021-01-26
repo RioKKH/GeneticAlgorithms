@@ -23,6 +23,7 @@ individual::individual(Parameters *prms)
 // deconstructor
 individual::~individual() {
     delete[] chromosome;
+    // delete[] chromosome;
 }
 
 
@@ -36,7 +37,8 @@ individual::~individual() {
 void individual::evaluate()
 {
     fitness = 0;
-    fitness = std::accumulate(chromosome, &chromosome[N], 0);
+    fitness = std::accumulate(&chromosome[0], &chromosome[N], 0);
+    return;
 }
 
 /**
@@ -69,13 +71,14 @@ void individual::apply_crossover_tp(individual *p1, individual *p2)
     int point1, point2, tmp, i;
 
     point1 = rand() & (N - 1);
-    point2 = (point1 + (rand() % (N - 2) + 1));
+    point2 = (point1 + (rand() % (N - 2) + 1)) % (N - 1);
 
     if (point1 > point2) {
         tmp = point1;
         point1 = point2;
         point2 = tmp;
     }
+    // std::cout << point1 << " " << point2 << std::endl;
     for (i = 0; i <= point1; i++) {
         chromosome[i] = p1->chromosome[i];
     }
