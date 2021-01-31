@@ -83,7 +83,6 @@ population::population()
 			k = i * chromosome_num + j;
 			h_ind[k] = rand() % 2;
 			h_next_ind[k] = 0;
-			// h_next_ind[i * chromosome_num + j] = 0;
 			printf("%d,%d,%d,%d,%d\n", i, j, k, h_ind[k], h_next_ind[k]);
 		}
 		h_fitness[i] = 0;
