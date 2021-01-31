@@ -10,14 +10,18 @@ public:
     // void alternate();            // 世代交代をする
     // void print_result();          // 結果を表示する
 
-    individual **h_ind;            // Host 現世代の個体群のメンバ
-    individual **d_ind;            // Device 現世代の個体群のメンバ
+    // individual **h_ind;            // Host 現世代の個体群のメンバ
+    // individual **d_ind;            // Device 現世代の個体群のメンバ
 
 private:
     // Data members
     // int gen_max = 0;
     int pop_num;
     int chromosome_num;
+    int *h_ind;
+    int *h_next_ind;
+    int *h_fitness;
+    int *d_ind, *d_next_ind, *d_fitness;
     // int elite = 0;
     int N;
     // int tournament_size = 0;
@@ -28,8 +32,8 @@ private:
     // int select_by_tournament();  // Tournament selection
     // int select_by_roulette();    // Roulette selection
     // void sort(int lb, int ub);   // 個体を良い順に並び替える
-    individual **h_next_ind;        // 次世代の個体群のメンバ
-    individual **d_next_ind;        // 次世代の個体群のメンバ
+    // individual **h_next_ind;        // 次世代の個体群のメンバ
+    // individual **d_next_ind;        // 次世代の個体群のメンバ
     // double *tr_fit; // converted fitness value
     // double tr_fit[POP_SIZE]; // converted fitness value
     // double denom;  // denominator used for roulette selection

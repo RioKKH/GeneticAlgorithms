@@ -6,6 +6,9 @@
 
 #include "individual.hpp"
 
+#include <cuda_runtime.h>
+#include <helper_cuda.h>
+
 
 // constructor
 individual::individual(Parameters *prms)
