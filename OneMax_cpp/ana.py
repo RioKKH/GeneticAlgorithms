@@ -6,7 +6,8 @@ import seaborn as sns
 
 
 def plot():
-    df = pd.read_csv("result3.dat")
+    names = ('gen', 'pop', 'elite', 'chromosome', 'tsize', 'mprob', 'elaps')
+    df = pd.read_csv("result3.dat", names=names)
     cpu = df[['pop', 'chromosome', 'elaps']].pivot_table(columns='pop',
                                                          index='chromosome',
                                                          values='elaps')[::-1]
