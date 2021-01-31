@@ -305,7 +305,8 @@ endif
 ################################################################################
 
 # Target rules
-CU_APPS = onemax small pop
+CU_APPS = onemax2
+# CU_APPS = onemax onemax2 small pop
 # CU_APPS = test onemax
 
 all: ${CU_APPS}
@@ -334,7 +335,13 @@ population.o : population.cu population.hpp
 onemax.o : onemax.cu
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
+onemax2.o : onemax2.cu
+	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
+
 onemax : onemax.o individual.o population.o
+	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
+
+onemax2 : onemax2.o pop.o
 	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
 
 small.o : small.cu
@@ -345,9 +352,6 @@ small : small.o
 
 pop.o : pop.cu
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
-
-pop : pop.o
-	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
 
 run: build
 

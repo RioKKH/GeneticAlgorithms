@@ -24,6 +24,7 @@ int main(int argc, char **argv)
 
     population *pop;
     pop = new population();
+    // population pop;
     // pop = new population(prms);
 
     double iStart = cpuSecond();
@@ -33,11 +34,11 @@ int main(int argc, char **argv)
     }
 	*/
     double iElaps = cpuSecond() - iStart;
-    std::cout << "Elapsed time: " << iElaps << std::endl;
+    // std::cout << "Elapsed time: " << iElaps << std::endl;
     // pop->print_result();
 
     // delete pointers
-	std::cout << "delete from onemac.cu" << std::endl;
+	// std::cout << "delete from onemac.cu" << std::endl;
     delete pop;
     // delete prms;
     // std::cout << "!!!End!!!" << std::endl;
