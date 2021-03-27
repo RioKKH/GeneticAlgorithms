@@ -20,9 +20,10 @@
 	}                                                                         \
 }                                                                             \
 
-__global__ void gpu_evolve(int, int, int*, int*, int*, int*);
-__device__ void calc_fitness(int, int, int*d, int*);
+__global__ void gpu_evolve(int, int, int*, int*, int*, int*, int*);
+__device__ void calc_fitness(int, int, int*d, int*, int*);
 __device__ void evaluate(int, int, int*d, int*, int*);
+__device__ void get_fitness(int, int* ,int*);
 
 
 int divRoundUp(int value, int radix) {
@@ -31,7 +32,9 @@ int divRoundUp(int value, int radix) {
 
 
 __global__ void gpu_evolve(int pop_num, int chromosome_num,
-		                 int* d_ind, int* d_next_ind, int* d_temp_ind, int* d_fitness)
+		                 int* d_ind,
+						 int* d_next_ind, int* d_temp_ind, int* d_fitness,
+						 int* d_diag)
 {
 	unsigned int y = blockDim.y * blockIdx.y + threadIdx.y;
 	unsigned int x = blockDim.x * blockIdx.x + threadIdx.x;
@@ -39,10 +42,14 @@ __global__ void gpu_evolve(int pop_num, int chromosome_num,
 	if (x < chromosome_num && y < pop_num) {
 		d_next_ind[idx] = d_ind[idx];
 	}
-	calc_fitness2(pop_num, chromosome_num, d_ind, d_temp_ind, d_fitness);
+	calc_fitness(pop_num, chromosome_num, d_ind, d_temp_ind, d_fitness);
+	get_fitness(chromosome_num, d_next_ind, d_fitness);
+	// calc_fitness(pop_num, chromosome_num, d_ind, d_fitness);
+	// calc_fitness2(pop_num, chromosome_num, d_ind, d_temp_ind, d_fitness);
 }
 
 
+/*
 __device__ void calc_fitness(int pop_num, int chromosome_num, int* d_ind, int* d_fitness)
 {
 	unsigned int x = blockDim.x * blockIdx.x + threadIdx.x;
@@ -55,9 +62,10 @@ __device__ void calc_fitness(int pop_num, int chromosome_num, int* d_ind, int* d
 	}
 	d_fitness[k] = tmp;
 }
+*/
 
 
-__device__ void evaluate(int pop_num, int chromosome_num,
+__device__ void calc_fitness(int pop_num, int chromosome_num,
 		                 int* d_ind, int* d_temp_ind, int* d_fitness)
 {
 	unsigned int x = blockDim.x * blockIdx.x + threadIdx.x;
@@ -68,6 +76,19 @@ __device__ void evaluate(int pop_num, int chromosome_num,
 	}
 	d_fitness[chromosome_num * y + x] = tmp;
 }
+
+__device__ void get_fitness(int chromosome_num, int* d_next_ind, int* d_fitness)
+{
+	unsigned int x = blockDim.x * blockIdx.x + threadIdx.x;
+	unsigned int y = blockDim.y * blockIdx.y + threadIdx.y;
+	int idx = chromosome_num * y + x;
+	if (x == y) {
+		d_next_ind[idx] = d_fitness[idx];
+	} else {
+		d_next_ind[idx] = 0;
+	}
+}
+
 
 
 // constructor
@@ -85,6 +106,7 @@ population::population()
 	h_next_ind = (int *)malloc(sizeof(int)*pop_num*chromosome_num);
 	h_temp_ind = (int *)malloc(sizeof(int)*pop_num*chromosome_num);
 	h_fitness  = (int *)malloc(sizeof(int)*pop_num*chromosome_num);
+	h_diag     = (int *)malloc(sizeof(int)*pop_num*chromosome_num);
 	// h_fitness  = (int *)malloc(sizeof(int)*pop_num);
 
 	std::cout << "Initialize generation 0" << std::endl;
@@ -96,6 +118,11 @@ population::population()
 			h_next_ind[k] = 0;
 			h_temp_ind[k] = 1;
 			h_fitness[i] = 0;
+			if (i == j) {
+				h_diag[k] = 1;
+			} else {
+				h_diag[k] = 0;
+			}
 			printf("%d,%d,%d,%d,%d\n", i, j, k, h_ind[k], h_next_ind[k]);
 		}
     }
@@ -104,6 +131,7 @@ population::population()
 	// memset(h_temp_ind, 1, sizeof(int)*pop_num*chromosome_num);
 	// memset(h_fitness, 0, sizeof(int)*pop_num);
 
+	/*
 	k = 0;
     for (int i = 0; i < pop_num; i++) {
 		for (int j = 0; j < chromosome_num; j++) {
@@ -113,6 +141,7 @@ population::population()
 			// 		i, j, h_fitness[i], h_ind[k]);
 		}
 	}
+	*/
 
 	k = 0;
     for (int i = 0; i < pop_num; i++) {
@@ -128,12 +157,14 @@ population::population()
 	CHECK(cudaMalloc((int**)&d_next_ind, pop_size));
 	CHECK(cudaMalloc((int**)&d_temp_ind, pop_size));
 	CHECK(cudaMalloc((int**)&d_fitness,  pop_size));
+	CHECK(cudaMalloc((int**)&d_diag,     pop_size));
 
 	std::cout << "cudaMemcpy" << std::endl;
 	CHECK(cudaMemcpy(d_ind,      h_ind,      pop_size, cudaMemcpyHostToDevice));
 	CHECK(cudaMemcpy(d_next_ind, h_next_ind, pop_size, cudaMemcpyHostToDevice));
 	CHECK(cudaMemcpy(d_temp_ind, h_temp_ind, pop_size, cudaMemcpyHostToDevice));
 	CHECK(cudaMemcpy(d_fitness,  h_fitness,  pop_size, cudaMemcpyHostToDevice));
+	CHECK(cudaMemcpy(d_diag,     h_diag,     pop_size, cudaMemcpyHostToDevice));
 
 	CHECK(cudaGetLastError());
 
@@ -145,7 +176,8 @@ population::population()
 	std::cout << "grid_num:" << gridDim.x << ":" << gridDim.y << std::endl;
 
 	gpu_evolve<<<gridDim, blockDim>>>(pop_num, chromosome_num,
-			                          d_ind, d_next_ind, d_temp_ind, d_fitness);
+			                          d_ind, d_next_ind, d_temp_ind,
+									  d_fitness, d_diag);
 	cudaDeviceSynchronize();
 	cudaMemcpy(h_next_ind, d_next_ind, pop_size, cudaMemcpyDeviceToHost);
 	cudaMemcpy(h_fitness,  d_fitness,  pop_size, cudaMemcpyDeviceToHost);
@@ -167,6 +199,15 @@ population::population()
 		printf("\n");
 		// printf(":%d\n", h_fitness[i]);
     }
+	std::cout << "next generation matrix" << std::endl;
+    for (int i = 0; i < pop_num; i++) {
+		for (int j = 0; j < chromosome_num; j++) {
+			printf("%d,", h_next_ind[i * chromosome_num + j]);
+			// printf("%d", h_next_ind[i * chromosome_num + j]);
+		}
+		printf("\n");
+		// printf(":%d\n", h_fitness[i]);
+    }
 }
 
 // destructor
@@ -176,10 +217,12 @@ population::~population()
     free(h_next_ind);
 	free(h_temp_ind);
 	free(h_fitness);
+	free(h_diag);
 	cudaFree(d_ind);
 	cudaFree(d_next_ind);
 	cudaFree(d_temp_ind);
 	cudaFree(d_fitness);
+	cudaFree(d_diag);
 	cudaDeviceReset();
 }
 
